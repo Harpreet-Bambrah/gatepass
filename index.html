@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatepass Management | SystemBanao</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Thermal Printer Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section {
+                position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm;
+                padding: 10px; font-size: 12px; font-family: monospace; color: #000;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print shadow-sm">
+        <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <!-- Brand Icon -->
+                    <div class="bg-brand-600 text-white p-1.5 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight text-slate-900">Gatepass Dashboard</h1>
+                        <p class="text-xs text-slate-500 font-medium tracking-wide">POWERED BY SYSTEMBANAO</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-medium text-slate-600 hidden sm:block">Admin Area</span>
+                    <div class="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold border border-brand-200">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 no-print">
+        
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Total Generated</p>
+                    <p class="text-2xl font-bold text-slate-800" id="kpi-total">0</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Pending Returnables</p>
+                    <p class="text-2xl font-bold text-slate-800" id="kpi-returnable">0</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Inward Material</p>
+                    <p class="text-2xl font-bold text-slate-800" id="kpi-inward">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Form -->
+            <div class="xl:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="font-semibold text-slate-800">New Gatepass</h2>
+                    </div>
+                    
+                    <form id="gatepassForm" class="p-6 space-y-5">
+                        <!-- Section 1 -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Flow Type</label>
+                            <select id="passType" class="w-full text-sm px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow" required>
+                                <option value="Outward - Returnable">Outward - Returnable (e.g., Repair)</option>
+                                <option value="Outward - Non-Returnable">Outward - Non-Returnable</option>
+                                <option value="Inward - Material">Inward - Material</option>
+                            </select>
+                        </div>
+
+                        <!-- Section 2 -->
+                        <div class="space-y-4 pt-2">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Entity Details</label>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Party / Vendor</label>
+                                <input type="text" id="partyName" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow placeholder-slate-400" placeholder="e.g. Sharma Motors" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Vehicle No. <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <input type="text" id="vehicleNo" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow placeholder-slate-400" placeholder="e.g. PB 30 XX 1234">
+                            </div>
+                        </div>
+
+                        <!-- Section 3 -->
+                        <div class="space-y-4 pt-2">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Item Details</label>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="col-span-3">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Item Description</label>
+                                    <input type="text" id="itemName" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow placeholder-slate-400" placeholder="e.g. 5HP Motor" required>
+                                </div>
+                                <div class="col-span-1">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Qty</label>
+                                    <input type="number" id="qty" min="1" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-center" value="1" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                                <textarea id="remarks" rows="2" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow placeholder-slate-400 resize-none" placeholder="Reason for transfer..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="w-full flex justify-center items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors focus:ring-4 focus:ring-brand-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                <span>Generate & Print</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Logs -->
+            <div class="xl:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full">
+                    <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                        <h2 class="font-semibold text-slate-800">Recent Logs</h2>
+                        <button onclick="clearDemoData()" class="text-xs font-medium text-red-600 hover:text-red-700 hover:underline">Reset Demo</button>
+                    </div>
+                    
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-white text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                    <th class="px-6 py-4">GP Number</th>
+                                    <th class="px-6 py-4">Status / Type</th>
+                                    <th class="px-6 py-4">Party & Item</th>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Thermal Print Layout (Hidden on Screen) -->
+    <div id="print-section" class="hidden">
+        <div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:2px; border-bottom:1px dashed #000; padding-bottom:5px;">AKP INSIGHT</div>
+        <div style="text-align:center; font-size:11px; margin-bottom:10px;">INDUSTRIAL GATEPASS</div>
+        
+        <div style="margin-bottom:4px;"><b>No:</b> <span id="print-gpno"></span></div>
+        <div style="margin-bottom:4px;"><b>Date:</b> <span id="print-date"></span></div>
+        <div style="margin-bottom:4px;"><b>Type:</b> <span id="print-type"></span></div>
+        <div style="margin-bottom:8px;"><b>Veh:</b> <span id="print-vehicle"></span></div>
+        
+        <div style="border-top:1px solid #000; border-bottom:1px solid #000; padding: 5px 0; margin-bottom:8px;">
+            <div style="margin-bottom:4px;"><b>Party:</b> <span id="print-party"></span></div>
+            <div style="margin-bottom:4px;"><b>Item:</b> <span id="print-item"></span></div>
+            <div><b>Qty:</b> <span id="print-qty"></span></div>
+        </div>
+        
+        <div style="font-size:11px; margin-bottom:30px; min-height: 20px;"><b>Rem:</b> <span id="print-remarks"></span></div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:20px;">
+            <span>Auth. Sign</span>
+            <span>Security</span>
+        </div>
+        <div style="text-align:center; font-size:9px; margin-top:15px; color:#555;">SystemBanao.com</div>
+    </div>
+
+    <script>
+        // Pre-populated realistic industrial demo data
+        const initialDemoData = [
+            { id: 'GP-812734', type: 'Outward - Returnable', party: 'Sharma Motors', vehicle: 'PB 30 A 1234', item: '5HP Motor', qty: '1', remarks: 'Sent for rewinding', date: '09 Nov 2026, 09:15 am' },
+            { id: 'GP-452819', type: 'Inward - Material', party: 'Gupta Hardware', vehicle: 'PB 08 B 9876', item: 'Nut & Bolts 10mm', qty: '500', remarks: 'Regular store supply', date: '08 Nov 2026, 04:30 pm' },
+            { id: 'GP-918273', type: 'Outward - Non-Returnable', party: 'Singh Scrap Traders', vehicle: 'PB 04 X 1111', item: 'Iron Scrap (kg)', qty: '1250', remarks: 'Scrap disposal', date: '08 Nov 2026, 01:10 pm' },
+            { id: 'GP-334123', type: 'Inward - Material', party: 'Resin India Pvt Ltd', vehicle: 'PB 29 C 4521', item: 'Industrial Glue Drums', qty: '20', remarks: 'For plywood bonding', date: '07 Nov 2026, 11:45 am' },
+            { id: 'GP-665213', type: 'Outward - Returnable', party: 'National Electronics', vehicle: 'N/A', item: 'Server UPS', qty: '2', remarks: 'Battery replacement', date: '07 Nov 2026, 09:00 am' },
+            { id: 'GP-112938', type: 'Inward - Material', party: 'Punjab Steel Works', vehicle: 'HR 38 D 0987', item: 'MS Pipes 2-inch', qty: '100', remarks: 'Shed construction', date: '06 Nov 2026, 03:20 pm' },
+            { id: 'GP-774829', type: 'Outward - Returnable', party: 'City Mechanics', vehicle: 'PB 30 Y 7766', item: 'Forklift Tyre', qty: '4', remarks: 'Retreading', date: '06 Nov 2026, 12:15 pm' },
+            { id: 'GP-551029', type: 'Outward - Non-Returnable', party: 'RK Packaging', vehicle: 'DL 1M 5543', item: 'Empty Cardboard Boxes', qty: '1000', remarks: 'Rejected stock return', date: '05 Nov 2026, 04:50 pm' },
+            { id: 'GP-229183', type: 'Inward - Material', party: 'TechSol Ltd', vehicle: 'N/A', item: 'Dell Workstation', qty: '1', remarks: 'IT Dept New PC', date: '05 Nov 2026, 10:05 am' },
+            { id: 'GP-881244', type: 'Outward - Returnable', party: 'Verma Engineers', vehicle: 'PB 10 P 3322', item: 'Hydraulic Press Pump', qty: '1', remarks: 'Seal replacement repair', date: '04 Nov 2026, 02:30 pm' }
+        ];
+
+        // Load data, inject demo data if completely empty
+        let passes = JSON.parse(localStorage.getItem('akp_gatepasses'));
+        if (!passes || passes.length === 0) {
+            passes = initialDemoData;
+            localStorage.setItem('akp_gatepasses', JSON.stringify(passes));
+        }
+
+        const form = document.getElementById('gatepassForm');
+        const logsBody = document.getElementById('logsTableBody');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const typeVal = document.getElementById('passType').value;
+            
+            const newPass = {
+                id: 'GP-' + Math.floor(100000 + Math.random() * 900000), // Cleaner 6 digit random
+                type: typeVal,
+                party: document.getElementById('partyName').value,
+                vehicle: document.getElementById('vehicleNo').value || 'N/A',
+                item: document.getElementById('itemName').value,
+                qty: document.getElementById('qty').value,
+                remarks: document.getElementById('remarks').value || '-',
+                date: new Date().toLocaleString('en-IN', { hour12: true, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
+            };
+
+            passes.unshift(newPass);
+            localStorage.setItem('akp_gatepasses', JSON.stringify(passes));
+            
+            form.reset();
+            updateDashboard();
+            printSlip(newPass.id);
+        });
+
+        function updateDashboard() {
+            renderTable();
+            updateKPIs();
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpi-total').textContent = passes.length;
+            document.getElementById('kpi-returnable').textContent = passes.filter(p => p.type.includes('Returnable') && !p.type.includes('Non')).length;
+            document.getElementById('kpi-inward').textContent = passes.filter(p => p.type.includes('Inward')).length;
+        }
+
+        function renderTable() {
+            logsBody.innerHTML = '';
+            
+            if(passes.length === 0) {
+                logsBody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400">No gatepasses generated. Start by creating one.</td></tr>';
+                return;
+            }
+
+            passes.forEach(p => {
+                let badgeClass = "bg-slate-100 text-slate-700";
+                let dotClass = "bg-slate-400";
+                
+                if(p.type.includes('Returnable') && !p.type.includes('Non')) {
+                    badgeClass = "bg-orange-50 text-orange-700 border-orange-200";
+                    dotClass = "bg-orange-500";
+                } else if(p.type.includes('Non-Returnable')) {
+                    badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
+                    dotClass = "bg-blue-500";
+                } else if(p.type.includes('Inward')) {
+                    badgeClass = "bg-green-50 text-green-700 border-green-200";
+                    dotClass = "bg-green-500";
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors group';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <span class="font-medium text-slate-900">${p.id}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${badgeClass}">
+                            <span class="h-1.5 w-1.5 rounded-full ${dotClass}"></span>
+                            ${p.type.split(' - ')[1] || p.type}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-slate-800">${p.party}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">${p.item} (Qty: ${p.qty})</div>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 text-sm">${p.date.split(',')[0]}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="printSlip('${p.id}')" class="text-slate-400 hover:text-brand-600 transition-colors p-1.5 rounded-md hover:bg-brand-50" title="Print Slip">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        </button>
+                    </td>
+                `;
+                logsBody.appendChild(tr);
+            });
+        }
+
+        function printSlip(id) {
+            const pass = passes.find(p => p.id === id);
+            if(!pass) return;
+
+            document.getElementById('print-gpno').textContent = pass.id;
+            document.getElementById('print-date').textContent = pass.date;
+            document.getElementById('print-type').textContent = pass.type;
+            document.getElementById('print-vehicle').textContent = pass.vehicle;
+            document.getElementById('print-party').textContent = pass.party;
+            document.getElementById('print-item').textContent = pass.item;
+            document.getElementById('print-qty').textContent = pass.qty;
+            document.getElementById('print-remarks').textContent = pass.remarks;
+
+            document.getElementById('print-section').classList.remove('hidden');
+            window.print();
+            setTimeout(() => { document.getElementById('print-section').classList.add('hidden'); }, 500);
+        }
+
+        function clearDemoData() {
+            if(confirm("Erase all local dashboard records?")) {
+                localStorage.removeItem('akp_gatepasses');
+                passes = [];
+                updateDashboard();
+            }
+        }
+
+        updateDashboard();
+    </script>
+</body>
+</html>
